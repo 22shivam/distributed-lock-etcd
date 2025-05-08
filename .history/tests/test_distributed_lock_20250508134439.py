@@ -17,10 +17,14 @@ def etcd_cleanup():
     client.delete_prefix("/locks/")
 
 def test_basic_acquire_release():
+    # acquire
     owner, lease = acquire_lock("test1", ttl=5, timeout=1)
+    # key should exist and match owner
     val, _ = client.get("/locks/test1")
     assert val.decode() == owner
+    # release
     release_lock("test1", owner, lease)
+    # key should be gone
     val, _ = client.get("/locks/test1")
     assert val is None
 
