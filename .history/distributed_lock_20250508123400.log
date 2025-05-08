@@ -1,0 +1,46 @@
+2025-05-07 17:55:59,650 INFO Attempting to acquire lock 'demo' (ttl=10s, timeout=5s)
+2025-05-07 17:55:59,666 DEBUG Created lease 4741893123410729903 for owner f1fd83da-88f8-484e-a33b-e2d9bad531fc
+2025-05-07 17:55:59,668 INFO Lock 'demo' acquired by f1fd83da-88f8-484e-a33b-e2d9bad531fc (lease 4741893123410729903)
+2025-05-07 17:55:59,669 INFO Releasing lock 'demo' held by f1fd83da-88f8-484e-a33b-e2d9bad531fc (lease 4741893123410729903)
+2025-05-07 17:55:59,670 DEBUG Lease 4741893123410729903 revoked
+2025-05-07 17:55:59,670 INFO Attempting to acquire lock 'demo2' (ttl=10s, timeout=5s)
+2025-05-07 17:55:59,671 DEBUG Created lease 4741893123410729908 for owner 7ff8bb23-552f-4d86-b86f-c0a2b2dfc222
+2025-05-07 17:55:59,672 INFO Lock 'demo2' acquired by 7ff8bb23-552f-4d86-b86f-c0a2b2dfc222 (lease 4741893123410729908)
+2025-05-07 17:55:59,672 DEBUG Re-entering lock 'demo2', count=2
+2025-05-07 17:55:59,672 DEBUG Exit called, still holding lock 'demo2', count=1
+2025-05-07 17:55:59,673 INFO Releasing lock 'demo2' held by 7ff8bb23-552f-4d86-b86f-c0a2b2dfc222 (lease 4741893123410729908)
+2025-05-07 17:55:59,674 DEBUG Lease 4741893123410729908 revoked
+2025-05-07 17:55:59,674 INFO Attempting to acquire lock 'long_demo' (ttl=3s, timeout=5s)
+2025-05-07 17:55:59,675 DEBUG Created lease 4741893123410729913 for owner 369b54fb-a757-44f6-a885-e7cdb78ebca2
+2025-05-07 17:55:59,676 INFO Lock 'long_demo' acquired by 369b54fb-a757-44f6-a885-e7cdb78ebca2 (lease 4741893123410729913)
+2025-05-07 17:56:01,188 DEBUG Lease 4741893123410729913 refreshed
+2025-05-07 17:56:02,697 DEBUG Lease 4741893123410729913 refreshed
+2025-05-07 17:56:04,205 DEBUG Lease 4741893123410729913 refreshed
+2025-05-07 17:56:05,714 DEBUG Lease 4741893123410729913 refreshed
+2025-05-07 17:56:06,681 INFO Releasing lock 'long_demo' held by 369b54fb-a757-44f6-a885-e7cdb78ebca2 (lease 4741893123410729913)
+2025-05-07 17:56:06,684 DEBUG Lease 4741893123410729913 revoked
+2025-05-07 17:59:16,444 INFO Attempting to acquire lock 'job42' (ttl=30s, timeout=5s)
+2025-05-07 17:59:16,458 DEBUG Created lease 4741893123410729918 for owner d83461e9-7cc0-42ba-896a-1c07d2b3b299
+2025-05-07 17:59:16,462 INFO Lock 'job42' acquired by d83461e9-7cc0-42ba-896a-1c07d2b3b299 (lease 4741893123410729918)
+2025-05-07 17:59:16,466 INFO Releasing lock 'job42' held by d83461e9-7cc0-42ba-896a-1c07d2b3b299 (lease 4741893123410729918)
+2025-05-07 17:59:16,468 DEBUG Lease 4741893123410729918 revoked
+2025-05-07 18:00:29,302 INFO Attempting to acquire lock 'job42' (ttl=30s, timeout=5s)
+2025-05-07 18:00:29,317 DEBUG Created lease 4741893123410729924 for owner 48d040e5-9e78-4402-84ab-381d2bfedfd7
+2025-05-07 18:00:29,320 INFO Lock 'job42' acquired by 48d040e5-9e78-4402-84ab-381d2bfedfd7 (lease 4741893123410729924)
+2025-05-07 18:00:29,321 INFO Releasing lock 'job42' held by 48d040e5-9e78-4402-84ab-381d2bfedfd7 (lease 4741893123410729924)
+2025-05-07 18:00:29,323 DEBUG Lease 4741893123410729924 revoked
+2025-05-07 18:01:21,019 INFO Attempting to acquire lock 'job42' (ttl=30s, timeout=5s)
+2025-05-07 18:01:21,031 DEBUG Created lease 4741893123410729930 for owner 5d06c7ea-64ce-4ee9-aca6-da5c9999731c
+2025-05-07 18:01:21,033 INFO Lock 'job42' acquired by 5d06c7ea-64ce-4ee9-aca6-da5c9999731c (lease 4741893123410729930)
+2025-05-07 18:01:21,034 INFO Releasing lock 'job42' held by 5d06c7ea-64ce-4ee9-aca6-da5c9999731c (lease 4741893123410729930)
+2025-05-07 18:01:21,035 DEBUG Lease 4741893123410729930 revoked
+2025-05-07 18:02:46,392 INFO Attempting to acquire lock 'job42' (ttl=30s, timeout=5s)
+2025-05-07 18:02:46,406 DEBUG Created lease 4741893123410729936 for owner fb8dd592-e093-4bce-9ebf-0fa9bbb17619
+2025-05-07 18:02:46,409 INFO Lock 'job42' acquired by fb8dd592-e093-4bce-9ebf-0fa9bbb17619 (lease 4741893123410729936)
+2025-05-07 18:02:46,411 INFO Releasing lock 'job42' held by fb8dd592-e093-4bce-9ebf-0fa9bbb17619 (lease 4741893123410729936)
+2025-05-07 18:02:46,413 DEBUG Lease 4741893123410729936 revoked
+2025-05-08 12:34:01,798 INFO Attempting to acquire lock 'job42' (ttl=30s, timeout=5s)
+2025-05-08 12:34:01,810 DEBUG Created lease 4741893123410730802 for owner 8b02fcf4-7340-4cff-a2dd-45f1812f4923
+2025-05-08 12:34:01,812 INFO Lock 'job42' acquired by 8b02fcf4-7340-4cff-a2dd-45f1812f4923 (lease 4741893123410730802)
+2025-05-08 12:34:01,814 INFO Releasing lock 'job42' held by 8b02fcf4-7340-4cff-a2dd-45f1812f4923 (lease 4741893123410730802)
+2025-05-08 12:34:01,815 DEBUG Lease 4741893123410730802 revoked

@@ -1,0 +1,216 @@
+# A Reentrant Distributed Lock Service with Logging and Auto-Renewal Built on etcd
+
+## Table of Contents
+
+* [Introduction](#introduction)
+* [Background](#background)
+
+  * [Raft Consensus Protocol](#raft-consensus-protocol)
+  * [What is etcd?](#what-is-etcd)
+  * [Key Terms](#key-terms)
+* [Setup & Run](#setup--run)
+* [Docker Compose Walkthrough](#docker-compose-walkthrough)
+* [Code Overview](#code-overview)
+
+  * [safe\_revoke](#safe_revoke)
+  * [\_wait\_for\_deletion](#_wait_for_deletion)
+  * [acquire\_lock](#acquire_lock)
+  * [release\_lock](#release_lock)
+  * [DistributedLock](#distributedlock)
+* [Test Suite](#test-suite)
+
+  * [Basic Acquire and Release](#basic-acquire-and-release)
+  * [Lease Expiry and Reacquire](#lease-expiry-and-reacquire)
+  * [Reentrant Locking](#reentrant-locking)
+  * [Auto-Renewal Behavior](#auto-renewal-behavior)
+  * [Concurrent Locking Timeout](#concurrent-locking-timeout)
+  * [Lock Status Check](#lock-status-check)
+  * [Exclusive Locking](#exclusive-locking)
+  * [TTL Expiry Inside Block](#ttl-expiry-inside-block)
+  * [Nested Lock Counts](#nested-lock-counts)
+  * [Multi-Client Exclusivity](#multi-client-exclusivity)
+* [Results & Demo](#results--demo)
+* [Design Decisions](#design-decisions)
+* [Future Work](#future-work)
+* [Conclusion](#conclusion)
+* [References](#references)
+
+## Introduction
+
+This project provides a simple, reusable Python service for distributed locking using etcd. Distributed locks are essential when multiple processes or services need exclusive access to shared resources—such as coordinating leader election, preventing concurrent database migrations, managing job queues, or controlling access to networked hardware in microservices. Without a reliable lock service, you risk race conditions, data corruption, and unpredictable failures.
+
+Our implementation supports:
+
+* **Reentrant locks** (allowing the same process or thread to acquire the same lock multiple times safely).
+* **Optional auto-renewal** to prevent accidental lease expiry during long-running operations.
+* **Structured logging** to a file for easy troubleshooting and audit trails.
+
+Applications include:
+
+* **Microservice coordination**: ensure only one instance performs a critical task at a time.
+* **Database migrations**: prevent concurrent schema changes.
+* **Task schedulers**: manage singleton jobs in distributed systems.
+* **Resource management**: serialize access to external services or hardware.
+
+## Background
+
+### Raft Consensus Protocol
+
+Raft is an algorithm that ensures a group of servers agree on a sequence of updates in a fault-tolerant way. It elects a leader to coordinate writes and replicates data safely to a majority of nodes.
+
+### What is etcd?
+
+etcd is a distributed key-value store built on Raft. It offers:
+
+* Strong consistency across nodes
+* TTL-based leases (automatic key removal)
+* Atomic transactions and watches for key changes
+
+We build our lock mechanism on etcd’s leases and transactions, leveraging Raft for safety.
+
+### Key Terms
+
+* **Lease**: A time-limited grant from etcd that associates a set of keys with a TTL (time-to-live). When the lease expires, all attached keys are automatically deleted.
+* **Lock**: A mutual exclusion primitive implemented by creating a unique key in etcd under a lease. Only the client holding the lease (and key) is considered the lock owner.
+* **TTL**: Time-To-Live. The duration (in seconds) for which a lease remains valid unless it is renewed.
+* **Timeout**: The maximum time a client will wait for a lock acquisition or key deletion before giving up and raising an error.
+* **Atomic Transaction**: A compare-and-swap operation in etcd that ensures a sequence of checks and updates happen as a single, all-or-nothing step. Used here to ensure only one client can create the lock key if it did not already exist.
+* **Watch**: An etcd feature that lets clients subscribe to changes on a key or prefix, receiving events when keys are created, updated, or deleted.
+* **Refresh (Keep-Alive)**: A mechanism to extend a lease’s TTL by sending periodic keep-alive requests to etcd, preventing the lease from expiring.
+
+## Setup & Run
+
+1. **Start the etcd cluster** (3 nodes):
+
+   ```bash
+   docker-compose up -d
+   ```
+2. **Install Python dependencies**:
+
+   ```bash
+   python -m venv venv
+   source venv/bin/activate
+   pip install etcd3 pytest
+   ```
+3. **Run the example**:
+
+   ```bash
+   python distributed_lock.py
+   ```
+4. **Execute tests**:
+
+   ```bash
+   python -m pytest -q
+   ```
+
+## Docker Compose Walkthrough
+
+The `docker-compose.yml` creates three etcd instances (`etcd1`, `etcd2`, `etcd3`), each mapping container ports 2379 (client) and 2380 (peer) to different host ports. They form a Raft cluster via `--initial-cluster` settings.
+
+## Code Overview
+
+### safe\_revoke
+
+**Purpose**: Safely cancel a lease without failing if it already expired. Ensures we don’t leave dangling leases in etcd.
+
+### \_wait\_for\_deletion
+
+**Purpose**: Pause execution until the lock key disappears or a timeout occurs. Uses etcd’s watch mechanism with a timer.
+
+### acquire\_lock
+
+**Purpose**: Obtain exclusive access to a resource. Creates a short-lived lease, attempts to claim the lock key atomically, and waits if someone else holds it.
+
+### release\_lock
+
+**Purpose**: Give up the lock if still valid. Checks ownership before revoking the lease so that only the rightful holder can release.
+
+### DistributedLock
+
+**Purpose**: A Python `with`-statement interface for locks that supports:
+
+* **Reentrancy**: same object can re-enter without blocking.
+* **Auto-renew**: background thread to keep the lease alive.
+* **is\_locked**: property to check current lock status.
+
+## Test Suite
+
+Each test uses a clean etcd namespace (`/locks/`) and verifies a key aspect of our lock service.
+
+### Basic Acquire and Release
+
+Ensures that a lock can be claimed and then released, and that the corresponding key appears and disappears in etcd.
+
+### Lease Expiry and Reacquire
+
+Verifies that once a lease’s TTL expires, a new client can successfully acquire the lock.
+
+### Reentrant Locking
+
+Checks that a lock held by one instance can be reacquired by the same instance without waiting.
+
+### Auto-Renewal Behavior
+
+Confirms that a lock with auto-renew enabled remains held beyond its initial TTL.
+
+### Concurrent Locking Timeout
+
+Simulates two threads racing for the same lock; the second thread should time out if the first holds it too long.
+
+### Lock Status Check
+
+Validates the `is_locked` property both inside and after a `with` block.
+
+### Exclusive Locking
+
+Tests direct function calls and context-manager usage to guarantee exclusivity: one client holds the lock, others must wait or fail.
+
+### TTL Expiry Inside Block
+
+Demonstrates that if no auto-renew is used, `is_locked` becomes false once the lease’s TTL passes.
+
+### Nested Lock Counts
+
+Confirms that nested `with` calls on the same instance increment a counter and only release once.
+
+### Multi-Client Exclusivity
+
+Uses two etcd clients pointed at different ports of the same cluster to show that locks are cluster-wide: one client’s lock blocks another.
+
+## Results & Demo
+
+You can watch a demonstration walkthrough: <video controls src="demo.mp4" width="600">
+Your browser does not support the video tag. </video>
+
+Example log excerpt:
+
+```
+2025-05-08 INFO Attempting to acquire lock 'job42'...
+2025-05-08 INFO Lock 'job42' acquired by abc123 (lease 789)
+2025-05-08 DEBUG Lease 789 refreshed
+2025-05-08 INFO Releasing lock 'job42'
+```
+
+## Design Decisions
+
+* **Leases** for automatic cleanup
+* **Reentrancy counter** to avoid redundant network calls
+* **Background renewal** to support long tasks
+* **Logging to file** for audit and debugging
+
+## Future Work
+
+* Fair queuing of waiters
+* Endpoint failover and authentication
+* Metrics integration
+* Package distribution on PyPI
+
+## Conclusion
+
+This project delivers a lightweight, safe, and flexible distributed lock for Python applications, backed by etcd’s Raft consensus. With reentrancy, auto-renewal, and comprehensive tests, it’s ready for real-world scenarios.
+
+## References
+
+* Diego Ongaro & John Ousterhout, *In Search of an Understandable Consensus Algorithm (Raft)*, 2014.
+* etcd Documentation: [https://etcd.io/docs/](https://etcd.io/docs/)
+* etcd3-py Client: [https://github.com/kragniz/python-etcd3](https://github.com/kragniz/python-etcd3)

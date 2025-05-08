@@ -1,0 +1,11 @@
+    # 1) Basic acquire/release with context manager
+    with DistributedLock("demo", ttl=10, timeout=5) as lock:
+        print("Acquired lock as", lock.owner)
+    print("Released lock\n")
+
+    # 2) Lease expiry test: TTL shorter than wait
+    with DistributedLock("expiry_demo", ttl=10, timeout=5) as lock1:
+        print("Lock held by", lock1.owner, "for ~3s (no refresh)...")
+        time.sleep(2)
+        with DistributedLock("expiry_demo", ttl=10, timeout=3) as lock2:
+            print("After expiry, new owner:", lock2.owner)
